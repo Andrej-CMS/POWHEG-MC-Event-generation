@@ -13,7 +13,7 @@ def change_inputfile(stage, process, mass, pdf, renscfact, facscfact):
         if 'POWHEG' not in os.path.dirname(process):
             print 'Argument ' + str(process) + ' is not a POWHEG process directory' + '\njob aborted'
             sys.exit()
-        
+        print process
         if not os.path.isfile(os.path.join(process, 'powheg.input-save')):
             print 'Template powheg.input-save doesn\'t exist, make sure it does, if you want to run POWHEG in parallel mode.'
             sys.exit()

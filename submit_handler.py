@@ -14,7 +14,7 @@ thisdir = os.path.abspath(thisdir)
 # ~ if not classdir in sys.path:
     # ~ sys.path.append(classdir)
     
-from batchConfig_base import batchConfig_base
+# from batchConfig_base import batchConfig_base
 
 
 # TODO: check if the other python functions for the generation process are in the right path and add them
@@ -32,6 +32,8 @@ from create_scripts import create_scripts
 
 def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalization = False):
     
+
+    initial_process = process
     process = process+'/run_PDF_'+pdf+'_M_'+mass+"_muR_"+str(renscfact)+"_muF_"+str(facscfact)
     if not os.path.exists(process):
         os.mkdir(process)
@@ -40,7 +42,7 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
     runtimeString = ''
     # 1st step: make the seed files (make_seeds) for the according process in POWHEG-BOX-[version]/[ProcessName]/pwgseeds.dat
     if not os.path.isfile(os.path.realpath(process)):
-        make_seeds(nbatches, process)
+        make_seeds(nbatches, process, initial_process)
         print 'Powheg seeds initialized!\n'
         
     stages = [11, 12, 13,14,15,16,17,18, 2, 31, 32, 4, "decay"]
@@ -52,14 +54,14 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
         print "This is not a valid choice. Abort!"
         exit(0)
 
-    
+
     # 2nd step: create the submit scripts (create_scripts): current_dir/GenData/[ProcessName]/jobscript_batch_[BatchNumber]
     if choice == 'decay':
-        create_scripts(nbatches, process, mass, pdf, decay = True)
+        create_scripts(nbatches, process, mass, pdf, choice, decay = True)
     else:
-        create_scripts(nbatches, process, mass, pdf)
+        create_scripts(nbatches, process, mass, pdf, choice)
     print 'Jobscripts written!\n'
-    
+
     
     # 3rd step: change the in the process directory already existing powheg.input file to the accoring parallel stage and start the script
     # number of POWHEG generation stages: default 5 stages in parallel generation (see change_input.py for more info)
@@ -149,34 +151,20 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
         # define which scripts should be submitted
         process_name = os.path.basename(process)
 
-        target_dir = os.path.join(work_dir, 'GenData', process_name)
+        target_dir = process
         os.chdir(target_dir)
-        scripts = glob("*.sh")
+        scripts = glob("*.cmd")
 
         if stage == stages[-3]:                     # special treatment for the first parallelstage=3: produce *fullgrid* files on a single core
             scripts = [os.path.abspath(sorted(scripts)[0])]
         else:
             scripts = [os.path.abspath(x) for x in scripts]
         
-
-        # directory for the array scripts
-        foldername = "SubmitArrays"
-        if not os.path.exists(foldername):
-            os.mkdir(foldername)
-        os.chdir(foldername)
+        # submit jobs with slurm
+        cmd = 'sbatch '+'POWHEG_JOB'+str(stage)+'.cmd'
+        # print "Submit command :", cmd
+        subprocess.call(cmd, shell = True)
         
-        # set the job properties
-        print 'Setting job porperties ... \n'
-        bc = batchConfig_base()
-        bc.batch_name = os.path.basename(process)
-        #bc.diskspace = 4000000
-        #bc.runtime = int(runtime) #n times 24h 
-        bc.jobFlavor = runtimeString
-        
-        # submit the batches in the current stage as an arrayjob to the cluster
-        print 'Submitting jobs ... \n'
-        arrayscriptpath = "stage_" + str(stage) + ".sh"
-        jobids += bc.submitArrayToBatch(scripts = scripts, arrayscriptpath = arrayscriptpath)
         print 'Jobs submitted!\n'
         
         os.chdir(work_dir)
