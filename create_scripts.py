@@ -6,7 +6,7 @@ import subprocess
 import random
 from glob import glob
 
-def create_scripts (nbatches, process, mass, pdf, stage, decay = False):
+def create_scripts (nbatches, process, mass, pdf, stage, decay = False, runMode = "HTCondor"):
     
         # check if given argument is a process directory in POWHEG-BOX-V2 or POWHEG-BOX-RES
         if 'POWHEG' not in os.path.dirname(process):
@@ -40,6 +40,15 @@ def create_scripts (nbatches, process, mass, pdf, stage, decay = False):
         #     print "==== NO OUTPUT FROM STAGE 11-15! Exit production ===="
         #     sys.exit(0)
 
+        if runmode == "Slurm":
+            produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False)
+        elif runmode == "HTCondor":
+            produceHTCondorScripts(nbatches, process, mass, pdf, stage, decay = False)
+        
+        os.chdir(work_dir)
+        print 'created scripts for POWHEG process ' + process_name
+
+def produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False):
         filename = "POWHEG_JOB"+stage+".cmd"
 
         queueTime = '24:00:00'
@@ -81,12 +90,35 @@ def create_scripts (nbatches, process, mass, pdf, stage, decay = False):
 
             scriptfile.write('cd ' + str(os.path.abspath(work_dir))+'\n')
 
-        
-        os.chdir(work_dir)
+def produceHTCondorScripts(nbatches, process, mass, pdf, stage, decay = False):
+    for batch in range(nbatches):
+        filename = os.path.abspath('./GenData/' + process_name) + '/jobscript_batch_' + str(batch) + '.sh'
+        if os.path.isfile(filename):
+            os.remove(filename)
+        with open(filename, 'wb') as scriptfile:
+            scriptfile.write('#!/bin/bash\n\n')
+            scriptfile.writelines([ 'sleep 3',
+                                    'export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n',
+                                    'source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n',
+                                    'export RUCIO_ACCOUNT=$USER\n',
+                                    'asetup AthGeneration,23.6.19 \n',
+                                    'sleep 5 \n',
+                                    ])
+            
+            scriptfile.writelines(['# run POWHEG process ' + str(process_name) + ' batch number ' + str(batch) + '\n',
+                                    'cd ' + str(os.path.abspath(process)) + '\n'])
+            if decay == True:
+                scriptfile.writelines(['echo pwgevents-' + str(batch).zfill(4) + '.lhe | ./lhef_decay\n',
+                                        'echo "</LesHouchesEvents>" | gzip - | cat - >> pwgevents-' + str(batch).zfill(4) + '-decayed.lhe \n'])
+                
+            else:
+                scriptfile.writelines(['echo ' + str(batch) + ' | ./../pwhg_main-gnu' '\n'])
+
+            scriptfile.write('cd ' + str(os.path.abspath(work_dir))+'\n')
                 
                 
         print 'created scripts for POWHEG process ' + process_name
-        # status = os.stat(filename)
-        # os.chmod(filename, status.st_mode | stat.S_IEXEC)
+        status = os.stat(filename)
+        os.chmod(filename, status.st_mode | stat.S_IEXEC)
                 
 

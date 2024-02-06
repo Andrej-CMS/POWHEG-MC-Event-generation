@@ -40,6 +40,7 @@ class batchConfig_base(object):
     jobmode_ = "NOTSET"
 
     subopts_ = ["universe = vanilla"]
+    subopts_.append('requirements = (OpSysAndVer =?= "CentOS7")')
     subopts_.append("should_transfer_files = IF_NEEDED")
     subopts_.append("notification = Never")
     subopts_.append("priority = 0")
