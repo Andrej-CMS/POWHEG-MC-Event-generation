@@ -19,7 +19,7 @@ def make_seeds (nbatches, process, initial_process):
         initial_process = os.path.abspath(initial_process)
         # check if given argument is a process directory in POWHEG-BOX-V2
         if 'POWHEG' not in os.path.dirname(process):
-            print 'Argument ' + str(process) + ' is not a POWHEG process directory' + '\njob aborted'
+            print(('Argument ' + str(process) + ' is not a POWHEG process directory' + '\njob aborted'))
             return
         # if it works go to process directory and write the seed file
         work_dir = os.getcwd()
@@ -33,19 +33,19 @@ def make_seeds (nbatches, process, initial_process):
             seedfile = os.path.join(process, "pwgseeds.dat")
         
         if os.path.exists(os.path.abspath(seedfile)):
-            print "The seedfile pwgseeds.dat alread exists. Do you want to overwrite it?"
-            confirmation = raw_input("y/n ")
+            print ("The seedfile pwgseeds.dat alread exists. Do you want to overwrite it?")
+            confirmation = input("y/n ")
             if any(confirmation == x for x in ["y","Y","yes","Yes", "YES"]):
-                print "are you sure?"
-                confirmation = raw_input("y/n ")
+                print ("are you sure?")
+                confirmation = input("y/n ")
                 if any(confirmation == x for x in ["y","Y","yes","Yes", "YES"]):
-                    print "Overwriting pwgseeds.dat"
+                    print ("Overwriting pwgseeds.dat")
                 else:
-                    print "Keeping old pwgseeds.dat" 
+                    print ("Keeping old pwgseeds.dat" )
                     os.chdir(work_dir)
                     return
             else:
-                print "Keeping old pwgseeds.dat"
+                print ("Keeping old pwgseeds.dat")
                 if useSameSeedsForAll:
                     source = seedfile
                     destination = os.path.join(process, "pwgseeds.dat")
@@ -63,7 +63,7 @@ def make_seeds (nbatches, process, initial_process):
             if os.path.exists(seedfile_old):
                 os.remove(seedfile_old)
             os.rename(seedfile, seedfile_old)
-        with open(seedfile, 'wb') as textfile:
+        with open(seedfile, 'w') as textfile:
             for i in range(nbatches):
                 textfile.write(str(random.randint(0, 99999999))+'\n')
 

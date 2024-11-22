@@ -1,13 +1,13 @@
 
 workFolder=${PWD}
 
-PDFs=( $(seq 14401 14459) )
+PDFs=( $(seq 14400 14458) )
 echo ${PDFs[@]}
 for pdf in  ${PDFs[@]}; do
 	# "y\ny\n11\n" y- change seeds, y- sure, stage 11, 12, 13, 14, 15, 2, 31
 	# if stage is 11, the first two yes are not necessary
 	# python submit_handler.py N-jobs, path ttbarj, mass top, LHA PDF NUMBER, muR factor, muF factor
-	python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 ${pdf} 1.0 1.0 < stageInput.txt
+	python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 ${pdf} 1.0 1.0 "HTCondor" < stageInput.txt
 	sleep 1
 	cd ${workFolder}
 done
@@ -18,39 +18,40 @@ for mass in  ${MASSES[@]}; do
 	# "y\ny\n11\n" y- change seeds, y- sure, stage 11, 12, 13, 14, 15, 2, 31
 	# if stage is 11, the first two yes are not necessary
 	# python submit_handler.py N-jobs, path ttbarj, mass top, LHA PDF NUMBER, muR factor, muF factor
-	python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj ${mass} 14400 1.0 1.0 < stageInput.txt
+	python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj ${mass} 14400 1.0 1.0 "HTCondor" < stageInput.txt
 	sleep 1
 	cd ${workFolder}
 done
 
+
 # # scale variations
 
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 0.5 1.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 0.5 1.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 2.0 1.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 2.0 1.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 1.0 0.5 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 1.0 0.5 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 1.0 2.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 1.0 2.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 2.0 2.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 2.0 2.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 0.5 0.5 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14400 0.5 0.5 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
 
 #alphaS variations
 # CT18NLO_as_0119
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14469 1.0 1.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14469 1.0 1.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
 # CT18NLO_as_0117
-python submit_handler.py 96 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14467 1.0 1.0 < stageInput.txt
+python submit_handler.py 48 /eos/user/a/asaibel/PowhegTTbarj/POWHEG-BOX-V2/ttbarj 172.5 14467 1.0 1.0 "HTCondor" < stageInput.txt
 sleep 1
 cd ${workFolder}
 

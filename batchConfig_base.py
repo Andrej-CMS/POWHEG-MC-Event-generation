@@ -40,13 +40,16 @@ class batchConfig_base(object):
     jobmode_ = "NOTSET"
 
     subopts_ = ["universe = vanilla"]
-    subopts_.append('requirements = (OpSysAndVer =?= "CentOS7")')
-    subopts_.append("should_transfer_files = IF_NEEDED")
+#    subopts_.append('requirements = (OpSysAndVer =?= "CentOS7")')
+    subopts_.append("should_transfer_files = YES")
+    subopts_.append("when_to_transfer_output = ON_EXIT_OR_EVICT")
+    subopts_.append("getenv = true")
     subopts_.append("notification = Never")
-    subopts_.append("priority = 0")
+    # subopts_.append("priority = 0")
     subopts_.append("run_as_owner = true")
     subopts_.append("max_retries = 3")
-    subopts_.append("retry_until = ExitCode == 0")
+    subopts_.append("retry_until = ExitCode == 0") 
+    subopts_.append("max_idle = 960")
     # subopts_.append("RequestMemory = 2500")
     # subopts_.append("+RequestRuntime = 86400")
     # subopts_.append("RequestDisk = 2000000")
@@ -75,11 +78,11 @@ class batchConfig_base(object):
         }
     }
     # print hostoptionsdict_["default"]["subopts"]
-    def __init__(self, hostname="", queue = ""):
+    def __init__(self, hostname="", queue=""):
         if not hostname:
-            a = subprocess.Popen(["hostname"], stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
+            a = subprocess.Popen(["hostname"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             output = a.communicate()[0]
-            output.replace('\n',"")
+            output = output.decode('utf-8').replace('\n', "")  # Ensure string type
             self.hostname_ = output
         else:
             self.hostname_ = hostname
@@ -90,7 +93,7 @@ class batchConfig_base(object):
                 host = key
 
         optionsdict = self.hostoptionsdict_[host]
-        print optionsdict["init_message"]
+        print((optionsdict["init_message"]))
         if "queue" in optionsdict:
             self.queue_ = optionsdict["queue"]
         if "subname" in optionsdict:
@@ -104,7 +107,7 @@ class batchConfig_base(object):
 
     def addhost(self, hostkeyword, dictionary):
         """
-        Add options a new host. The variable 'hostkeyword' has to be part of the hostname.
+        Add options a new host. The variable 'hostkeyword' has to be part of the I.
 
         Current list of options that can be set:
         queue       --  queue that is to be used (on old lxplus batch)
@@ -138,7 +141,7 @@ class batchConfig_base(object):
         if index != None:
             self.subopts_.pop(index)
         else:
-            print "Attribute does not exist for this batchConfig, will do nothing"
+            print ("Attribute does not exist for this batchConfig, will do nothing")
 
     def get_index_for_attribute(self, attribute):
         """
@@ -163,7 +166,7 @@ class batchConfig_base(object):
         """
         index = self.get_index_for_attribute(attribute = attribute)
         s = " = ".join([attribute, optionsstring])
-        print "setting '%s' for submit" % s
+        print(("setting '%s' for submit" % s))
         if index != None:
             self.subopts_[index] = s
         else:
@@ -198,7 +201,7 @@ class batchConfig_base(object):
         elif isinstance(value, str):
             if value.isnumeric(): test = value
         else:
-            print "Input value is not a number, could not set memory!"
+            print ("Input value is not a number, could not set memory!")
 
         if not test == None:
             self.setoption(attribute = "RequestMemory", optionsstring = str(value))
@@ -221,7 +224,7 @@ class batchConfig_base(object):
         elif isinstance(value, str):
             if value.isnumeric(): test = value
         else:
-            print "Input value is not a number, could not set diskspace!"
+            print ("Input value is not a number, could not set diskspace!")
         if test != None:
             self.setoption(attribute = "RequestDisk", optionsstring = str(value))
 
@@ -241,10 +244,10 @@ class batchConfig_base(object):
         if isinstance(value, float) or isinstance(value, int):
             test = str(value)
         elif isinstance(value, str):
-            value = unicode(value, "utf-8")
+            value = str(value,)
             if value.isnumeric(): test = value
         else:
-            print "Input value is not a number, could not set runtime!"
+            print ("Input value is not a number, could not set runtime!")
 
         if not test == None:
             self.setoption(attribute = "+RequestRuntime", optionsstring = str(value))
@@ -263,10 +266,10 @@ class batchConfig_base(object):
         """
         test = None
         if isinstance(value, str):
-            value = unicode(value, "utf-8")
+            value = str(value)
             test = value
         else:
-            print "Input value is not a string, could not set jobFlavor!"
+            print ("Input value is not a string, could not set jobFlavor!")
 
         if not test == None:
             self.setoption(attribute = "+JobFlavour", optionsstring = str(value))
@@ -282,10 +285,10 @@ class batchConfig_base(object):
     def batch_name(self, value):
         test = None
         if isinstance(value, str):
-            value = unicode(value, "utf-8")
+            value = str(value)
             test = value
         else:
-            print "Input value is not a string, could not set batch_name!"
+            print ("Input value is not a string, could not set batch_name!")
 
         if not test == None:
             self.setoption(attribute = "batch_name", optionsstring = str(value))
@@ -333,7 +336,7 @@ class batchConfig_base(object):
         if isArray:
             submitCode+="error = "+logdir+"/"+submitScript+".$(Cluster)_$(ProcId).err\n"
             submitCode+="output = "+logdir+"/"+submitScript+".$(Cluster)_$(ProcId).out\n"
-            submitCode+="log = "+logdir+"/"+submitScript+".$(Cluster)_$(ProcId).log\n"
+            #submitCode+="log = "+logdir+"/"+submitScript+".$(Cluster)_$(ProcId).log\n"
             submitCode+="Queue Environment From (\n"
             for taskID in range(nscripts):
                 submitCode+="\"SGE_TASK_ID="+str(taskID)+"\"\n"
@@ -341,7 +344,7 @@ class batchConfig_base(object):
         else:
             submitCode+="error = "+logdir+"/"+submitScript+".$(Cluster).err\n"
             submitCode+="output = "+logdir+"/"+submitScript+".$(Cluster).out\n"
-            submitCode+="log = "+logdir+"/"+submitScript+".$(Cluster).log\n"
+            #submitCode+="log = "+logdir+"/"+submitScript+".$(Cluster).log\n"
             submitCode+="queue"
 
         submitFile = open(submitPath, "w")
@@ -383,7 +386,7 @@ class batchConfig_base(object):
 
     def construct_array_submit(self):
         command = None
-        command = [self.subname_, '-terse','-o', '/dev/null', '-e', '/dev/null']
+        command = [self.subname_,'-o', '/dev/null', '-e', '/dev/null']
         command += self.subopts_
         return command
     
@@ -424,7 +427,7 @@ class batchConfig_base(object):
         arrayscriptpath = os.path.abspath(arrayscriptpath)
 
         logdir = os.path.dirname(arrayscriptpath)+"/logs"
-        print "will save logs in", logdir
+        print(("will save logs in", logdir))
         # if os.path.exists(logdir):
         #     print "emptying directory", logdir
         #     shutil.rmtree(logdir)
@@ -440,18 +443,18 @@ class batchConfig_base(object):
         
         # prepate submit
         if "HTC" in self.jobmode_:
-            print 'writing code for condor_submit-script'
+            print ('writing code for condor_submit-script')
             hold = True if jobid else False
             submitPath = self.writeSubmitCode(arrayscriptpath, logdir, hold = hold, isArray = True, nscripts = nscripts)
             
-            print 'submitting',submitPath
-            command = self.subname_ + " -terse " + submitPath
+            print(('submitting',submitPath))
+            command = self.subname_ +" " + submitPath
             command = command.split()
         else:
-            print 'submitting',arrayscriptpath
+            print(('submitting',arrayscriptpath))
             command = self.construct_array_submit()
             if not command:            
-                print "could not generate array submit command"
+                print ("could not generate array submit command")
                 return 
             command.append('-t')
             command.append(tasknumberstring)
@@ -461,20 +464,20 @@ class batchConfig_base(object):
             command.append(arrayscriptpath)
         
         # submitting
-        print "command:", command
         a = subprocess.Popen(command, stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
         output = a.communicate()[0]
         jobidstring = output
         if len(jobidstring)<2:
             sys.exit("something did not work with submitting the array job")
-        
-        # extracting jobid
-        try:
-            jobidint = int(output.split(".")[0])
-        except:
-            sys.exit("something went wrong with calling condor_submit command, submission of jobs was not succesfull")
+    
+        # # extracting jobid
+        jobidint = 0
+        # try:
+        #     jobidint = int(output.split(".")[0])
+        # except:
+        #     sys.exit("something went wrong with calling condor_submit command, submission of jobs was not succesfull")
+
         submittime=submitclock.RealTime()
-        print "submitted job", jobidint, " in ", submittime
         if hold:
             self.setupRelease(jobid, jobidint)
         return [jobidint]
@@ -498,7 +501,7 @@ class batchConfig_base(object):
         if self.jobmode_ == "HTC":
             hold = True if jobid else False
             submitPath = self.writeSubmitCode(script, logdir, hold = hold)
-            cmdlist.append("-terse")
+            # cmdlist.append("-terse")
             cmdlist.append(submitPath)
         else:
             cmdlist += self.subopts_
@@ -510,13 +513,14 @@ class batchConfig_base(object):
             cmdlist.append(script)
         jobids = []
         #command = " ".join(cmdlist)
-        print "command:", cmdlist
+        
         a = subprocess.Popen(cmdlist, stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
         output = a.communicate()[0]
         #print output
         if self.jobmode_ == "HTC":
             try:
                 jobidint = int(output.split(".")[0])
+                print(("jobidint: ", jobidint))
             except:
                 sys.exit("something went wrong with calling condor_submit command, submission of jobs was not succesfull")
         else:
@@ -526,7 +530,7 @@ class batchConfig_base(object):
                     jobidint=int(jid)
                     continue
 
-        print "this job's ID is", jobidint
+        print(("this job's ID is", jobidint))
         jobids.append(jobidint)
         if hold:
             self.setupRelease(jobid, jobidint)
@@ -570,7 +574,7 @@ class batchConfig_base(object):
                                 break
     
             if nrunning>0:
-                print nrunning,'jobs running'
+                print((nrunning,'jobs running'))
             else:
                 allfinished=True
     

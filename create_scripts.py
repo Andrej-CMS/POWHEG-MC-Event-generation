@@ -6,11 +6,11 @@ import subprocess
 import random
 from glob import glob
 
-def create_scripts (nbatches, process, mass, pdf, stage, decay = False, runMode = "HTCondor"):
+def create_scripts (nbatches, process, mass, pdf, stage, initialFolder, runMode = "HTCondor", decay = False):
     
         # check if given argument is a process directory in POWHEG-BOX-V2 or POWHEG-BOX-RES
         if 'POWHEG' not in os.path.dirname(process):
-            print 'Error: Argument ' + str(process) + ' is not a POWHEG process directory' + '\nGeneration aborted!'
+            print(('Error: Argument ' + str(process) + ' is not a POWHEG process directory' + '\nGeneration aborted!'))
             return
         
         # generate directory system
@@ -36,19 +36,15 @@ def create_scripts (nbatches, process, mass, pdf, stage, decay = False, runMode 
     
         os.chdir(runFolder)
 
-        # if not os.path.isfile("POWHEG_stage11.out") and "2" == stage:
-        #     print "==== NO OUTPUT FROM STAGE 11-15! Exit production ===="
-        #     sys.exit(0)
-
-        if runmode == "Slurm":
-            produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False)
-        elif runmode == "HTCondor":
-            produceHTCondorScripts(nbatches, process, mass, pdf, stage, decay = False)
+        if runMode == "Slurm":
+            produceSlurmScripts(nbatches, process, mass, pdf, stage, process_name, work_dir, decay = False,)
+        elif runMode == "HTCondor":
+            produceHTCondorScripts(nbatches, process, mass, pdf, stage, process_name, initialFolder, work_dir, decay = False)
         
         os.chdir(work_dir)
-        print 'created scripts for POWHEG process ' + process_name
+        print(('created scripts for POWHEG process ' + process_name))
 
-def produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False):
+def produceSlurmScripts(nbatches, process, mass, pdf, stage, process_name, work_dir, decay = False):
         filename = "POWHEG_JOB"+stage+".cmd"
 
         queueTime = '24:00:00'
@@ -59,7 +55,7 @@ def produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False):
         if "31" == stage:
             queueTime = '12:00:00'
 
-        with open(filename, 'wb') as scriptfile:
+        with open(filename, 'w') as scriptfile:
             scriptfile.write('#!/bin/bash\n\n')
             scriptfile.writelines(['#SBATCH --job-name=\"'+process_name+'\"\n',
                                     '#SBATCH --workdir=.\n',
@@ -90,19 +86,27 @@ def produceSlurmScripts(nbatches, process, mass, pdf, stage, decay = False):
 
             scriptfile.write('cd ' + str(os.path.abspath(work_dir))+'\n')
 
-def produceHTCondorScripts(nbatches, process, mass, pdf, stage, decay = False):
+def produceHTCondorScripts(nbatches, process, mass, pdf, stage, process_name, initialFolder, work_dir, decay = False):
+    os.chdir(initialFolder)
+    if not os.path.exists('./GenData'):
+        os.mkdir('./GenData')
+    if not os.path.exists('./GenData/' + process_name):
+        os.mkdir('./GenData/' + process_name)
+# create the submit scripts (create_scripts): current_dir/GenData/[ProcessName]/jobscript_batch_[BatchNumber]
     for batch in range(nbatches):
-        filename = os.path.abspath('./GenData/' + process_name) + '/jobscript_batch_' + str(batch) + '.sh'
+        
+        filename = './GenData/'+process_name+'/jobscript_batch_' + str(batch) + '.sh'
+ 
         if os.path.isfile(filename):
             os.remove(filename)
-        with open(filename, 'wb') as scriptfile:
+        with open(filename, 'w') as scriptfile:
             scriptfile.write('#!/bin/bash\n\n')
-            scriptfile.writelines([ 'sleep 3',
-                                    'export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n',
-                                    'source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n',
-                                    'export RUCIO_ACCOUNT=$USER\n',
-                                    'asetup AthGeneration,23.6.19 \n',
-                                    'sleep 5 \n',
+            scriptfile.writelines([ 'sleep_time=$((5 + RANDOM % 11))',
+                                    # 'export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase \n',
+                                    # 'source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh \n',
+                                    # 'export RUCIO_ACCOUNT=$USER \n',
+                                    # 'asetup AthGeneration,21.6.105 \n',
+                                    'sleep $sleep_time \n',
                                     ])
             
             scriptfile.writelines(['# run POWHEG process ' + str(process_name) + ' batch number ' + str(batch) + '\n',
@@ -112,13 +116,9 @@ def produceHTCondorScripts(nbatches, process, mass, pdf, stage, decay = False):
                                         'echo "</LesHouchesEvents>" | gzip - | cat - >> pwgevents-' + str(batch).zfill(4) + '-decayed.lhe \n'])
                 
             else:
-                scriptfile.writelines(['echo ' + str(batch) + ' | ./../pwhg_main-gnu' '\n'])
-
-            scriptfile.write('cd ' + str(os.path.abspath(work_dir))+'\n')
+                scriptfile.writelines(['echo ' + str(batch) + ' | ./../pwhg_main-gnu \n'])                
                 
-                
-        print 'created scripts for POWHEG process ' + process_name
+        print(('created scripts for POWHEG process ' + process_name))
         status = os.stat(filename)
         os.chmod(filename, status.st_mode | stat.S_IEXEC)
                 
-
