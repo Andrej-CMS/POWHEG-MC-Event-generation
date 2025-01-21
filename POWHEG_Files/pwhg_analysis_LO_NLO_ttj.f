@@ -44,7 +44,11 @@ cmv numbers:
       arrjetcut(0)=30.d0
       arrjetcut(1)=50.d0
       arrjetcut(2)=60.d0
-      njetcut=3
+      arrjetcut(3)=70.d0
+      arrjetcut(4)=80.d0
+      arrjetcut(5)=90.d0
+      arrjetcut(6)=100.d0
+      njetcut=7
 
 cmv array of cuts on the eta of the extra jet:
 cmv first I initialize it:
