@@ -12,7 +12,7 @@ def makeRootFiles (process , mass , pdf , renscfact , facscfact ):
         
         # check if given argument is a process directory in POWHEG-BOX-V2 or POWHEG-BOX-RES
         if 'POWHEG' not in os.path.dirname(process):
-            print 'Error: Argument ' + str(process) + ' is not a POWHEG process directory' + '\nGeneration aborted!'
+            print('Error: Argument ' + str(process) + ' is not a POWHEG process directory' + '\nGeneration aborted!')
             return
         
         targetFile = "pwg-all-NLO.root"
@@ -24,7 +24,7 @@ def makeRootFiles (process , mass , pdf , renscfact , facscfact ):
         runFolder = os.path.abspath(process)
 
         if not os.path.exists(runFolder):
-            print "runFolder does not exist!!! ", runFolder
+            print("runFolder does not exist!!! ", runFolder)
 
         # Need to copy the powheg inputsave file before scripts are run
         os.chdir(runFolder)
@@ -79,7 +79,7 @@ def makeRootFiles (process , mass , pdf , renscfact , facscfact ):
         #         scriptfile.write('cd ' + str(os.path.abspath(work_dir))+'\n')
                 
                 
-        print 'All TOP files are converted and hadded ' + runFolder
+        print('All TOP files are converted and hadded ' + runFolder)
         # status = os.stat(filename)
         # os.chmod(filename, status.st_mode | stat.S_IEXEC)
 
@@ -92,7 +92,7 @@ def makeRootFiles (process , mass , pdf , renscfact , facscfact ):
 
         # os.chdir(outputFolder)
         copy_folder = outputFolder +"/"+process_name
-        print "Copying files to " + copy_folder 
+        print("Copying files to " + copy_folder) 
         if not os.path.exists(copy_folder):
             os.mkdir(copy_folder)
 

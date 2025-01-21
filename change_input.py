@@ -11,11 +11,11 @@ def change_inputfile(stage, process, mass, pdf, renscfact, facscfact):
         
         # check if given argument is a process directory in POWHEG-BOX-V2
         if 'POWHEG' not in os.path.dirname(process):
-            print 'Argument ' + str(process) + ' is not a POWHEG process directory' + '\njob aborted'
+            print(('Argument ' + str(process) + ' is not a POWHEG process directory' + '\njob aborted'))
             sys.exit()
-        
+        print (process)
         if not os.path.isfile(os.path.join(process, 'powheg.input-save')):
-            print 'Template powheg.input-save doesn\'t exist, make sure it does, if you want to run POWHEG in parallel mode.'
+            print ('Template powheg.input-save doesn\'t exist, make sure it does, if you want to run POWHEG in parallel mode.')
             sys.exit()
         
         # change the powheg.input file for the process according to the parallelstage
@@ -98,7 +98,7 @@ def change_inputfile(stage, process, mass, pdf, renscfact, facscfact):
 
 def main (args = sys.argv[1:]):
     if not(args[0].isdigit()):
-        print 'Wrong usage! First argument has to be the stage number: \n[1] for importance sampling grid calculation (1st step) \n   optional: [1.1] or [1.2] for the iteration of the grid \n[2] for NLO and upper bounding envelope (2nd step) \n[3] for upper bounding coefficients \n [4] for event generation \nAbort!'
+        print ('Wrong usage! First argument has to be the stage number: \n[1] for importance sampling grid calculation (1st step) \n   optional: [1.1] or [1.2] for the iteration of the grid \n[2] for NLO and upper bounding envelope (2nd step) \n[3] for upper bounding coefficients \n [4] for event generation \nAbort!')
         exit(0)
         
     stage   = int(args[0])

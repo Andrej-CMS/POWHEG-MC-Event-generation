@@ -21,7 +21,7 @@ from batchConfig_base import batchConfig_base
 if not thisdir in sys.path:
     sys.path.append(thisdir)
     
-print "The current working directory is: ", sys.path
+# print "The current working directory is: ", sys.path
 
 from change_input import change_inputfile
 from make_seeds import make_seeds
@@ -30,9 +30,12 @@ from create_scripts import create_scripts
 
 
 
-def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalization = False):
+def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalization = False, runMode = "HTCondor"):
     
-    process = process+'/run_PDF_'+pdf+'_M_'+mass+"_muR_"+str(renscfact)+"_muF_"+str(facscfact)
+    initialFolder = os.getcwd()
+    initial_process = process
+    runFolder = '/run_PDF_'+pdf+'_M_'+mass+"_muR_"+str(renscfact)+"_muF_"+str(facscfact)
+    process = process + runFolder
     if not os.path.exists(process):
         os.mkdir(process)
 
@@ -40,26 +43,26 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
     runtimeString = ''
     # 1st step: make the seed files (make_seeds) for the according process in POWHEG-BOX-[version]/[ProcessName]/pwgseeds.dat
     if not os.path.isfile(os.path.realpath(process)):
-        make_seeds(nbatches, process)
-        print 'Powheg seeds initialized!\n'
+        make_seeds(nbatches, process, initial_process)
+        print( 'Powheg seeds initialized!\n')
         
     stages = [11, 12, 13,14,15,16,17,18, 2, 31, 32, 4, "decay"]
     choices = ["stage 1, xgrid 1", "stage 1, xgrid 2", "stage 1, xgrid 3", "stage 2", "stage 3 init", "stage 3 full", "stage 4", "decay"]
-    choice_stages = dict(zip(choices, stages))
-    print "With which stage do you want to start the generation? Choose:", choice_stages
-    choice = raw_input("Type one of the numbers or \"decay\". The order of a POWHEG run is [" + " ".join([str(x) for x in stages]) + "]: ")
+    choice_stages = dict(list(zip(choices, stages)))
+    print(("With which stage do you want to start the generation? Choose:", choice_stages))
+    choice = input("Type one of the numbers or \"decay\". The order of a POWHEG run is [" + " ".join([str(x) for x in stages]) + "]: ")
     if not any(choice == str(x) for x in stages):
-        print "This is not a valid choice. Abort!"
+        print ("This is not a valid choice. Abort!")
         exit(0)
 
-    
+
     # 2nd step: create the submit scripts (create_scripts): current_dir/GenData/[ProcessName]/jobscript_batch_[BatchNumber]
     if choice == 'decay':
-        create_scripts(nbatches, process, mass, pdf, decay = True)
+        create_scripts(nbatches, process, mass, pdf, choice, initialFolder, runMode , decay = True)
     else:
-        create_scripts(nbatches, process, mass, pdf)
-    print 'Jobscripts written!\n'
-    
+        create_scripts(nbatches, process, mass, pdf, choice, initialFolder, runMode)
+    print ('Jobscripts written!\n')
+
     
     # 3rd step: change the in the process directory already existing powheg.input file to the accoring parallel stage and start the script
     # number of POWHEG generation stages: default 5 stages in parallel generation (see change_input.py for more info)
@@ -68,59 +71,58 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
         
         if choice == '11':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
-            True
+            runtimeString = '\"workday\"'
         elif choice == '12':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if n == 0: continue
         elif choice == '13':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1]): continue
         elif choice == '14':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1,2]): continue
         elif choice == '15':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1,2,3]): continue
         elif choice == '16':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1,2,3,4]): continue
         elif choice == '17':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1,2,3,4,5]): continue
         elif choice == '18':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"workday\"'
             if any(n == x for x in [0,1,2,3,4,5,6]): continue
         elif choice == '2':
             runtime = 3*86400
-            runtimeString = "\'nextweek\'"
+            runtimeString = '\"nextweek\"'
             if any(n == x for x in [0,1,2,3,4,5,6,7]): continue
         elif choice == '31':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"tomorrow\"'
             if any(n == x for x in [0,1,2,3,4,5,6,7,8]): continue
         elif choice == '32':
             runtime = 86400
-            runtimeString = "\'tomorrow\'"
+            runtimeString = '\"tomorrow\"'
             if any(n == x for x in [0,1,2,3,4,5,6,7,8,9]): continue
         elif choice == '4':
             runtime = 2*86400
-            runtimeString = "\'testmatch\'"
+            runtimeString = '\"testmatch\"'
             if any(n == x for x in [0,1,2,3,4,5,6,7,8,9,10]): continue
         elif choice == 'decay':
             runtime = 3600
-            runtimeString = "\'longlunch\'"
+            runtimeString = '\"tomorrow\"'
             stage = "decay"
             if any(n == x for x in [0,1,2,3,4,5,6,7,8,9,10,11]): continue
             
-    	print 'Start with generation step parallelstage ' + str(stage) + ':\n'
+        print(('Start with generation step parallelstage ' + str(stage) + ':\n'))
         # change the powheg.input file for each process according to the stage
         change_inputfile(stage, process, mass, pdf, renscfact, facscfact )
         
@@ -133,7 +135,7 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
         if n == 0:
             # check if old pwggridinfo*.dat, pwg-*.top, pwggrid*.dat, pwgfullgrid*.dat, pwgubound*.dat  files from previous generation exists
             # if they exist, remove them to make sure to preserve a statistically independent generation process
-            print 'Checking for old generation remnants ......\n'
+            print ('Checking for old generation remnants ......\n')
             
             #TODO apply right deletions for the according stages
             os.chdir(process)
@@ -144,40 +146,53 @@ def submit_handler(nbatches, process, mass, pdf, renscfact, facscfact, finalizat
             genfiles = [os.path.abspath(x) for x in genfiles]
             for genfile in genfiles:
                 os.remove(genfile)
-            print 'Generation remnants removed. Can start clean generation.\n'
+            print ('Generation remnants removed. Can start clean generation.\n')
         
         # define which scripts should be submitted
         process_name = os.path.basename(process)
 
-        target_dir = os.path.join(work_dir, 'GenData', process_name)
-        os.chdir(target_dir)
-        scripts = glob("*.sh")
+        if runMode == "HTCondor":
+            target_dir = initialFolder+"/GenData"+runFolder
+            os.chdir(target_dir)
+            scripts = glob("*.sh")
+        elif runMode == "Slurm":
+            target_dir = process
+            os.chdir(target_dir)
+            scripts = glob("*.cmd")
 
-        if stage == stages[-3]:                     # special treatment for the first parallelstage=3: produce *fullgrid* files on a single core
+        # special treatment for the first parallelstage=3: produce *fullgrid* files on a single core
+        if stage == stages[-3]:                     
             scripts = [os.path.abspath(sorted(scripts)[0])]
         else:
             scripts = [os.path.abspath(x) for x in scripts]
         
+        if runMode == "HTCondor":
+            # directory for the array scripts
+            foldername = "SubmitArrays"
+            if not os.path.exists(foldername):
+                os.mkdir(foldername)
+            os.chdir(foldername)
+            
+            # set the job properties
+            print ('Setting job porperties ... \n')
+            bc = batchConfig_base()
+            bc.batch_name = os.path.basename(process)
+            #bc.diskspace = 4000000
+            #bc.runtime = int(runtime) #n times 24h 
+            bc.jobFlavor = runtimeString
+            
+            # submit the batches in the current stage as an arrayjob to the cluster
+            print( 'Submitting jobs ... \n')
+            arrayscriptpath = "stage_" + str(stage) + ".sh"
+            jobids += bc.submitArrayToBatch(scripts = scripts, arrayscriptpath = arrayscriptpath)
 
-        # directory for the array scripts
-        foldername = "SubmitArrays"
-        if not os.path.exists(foldername):
-            os.mkdir(foldername)
-        os.chdir(foldername)
+        elif runMode == "Slurm":
+            # submit jobs with slurm
+            cmd = 'sbatch '+'POWHEG_JOB'+str(stage)+'.cmd'
+            # print "Submit command :", cmd
+            subprocess.call(cmd, shell = True)
         
-        # set the job properties
-        print 'Setting job porperties ... \n'
-        bc = batchConfig_base()
-        bc.batch_name = os.path.basename(process)
-        #bc.diskspace = 4000000
-        #bc.runtime = int(runtime) #n times 24h 
-        bc.jobFlavor = runtimeString
-        
-        # submit the batches in the current stage as an arrayjob to the cluster
-        print 'Submitting jobs ... \n'
-        arrayscriptpath = "stage_" + str(stage) + ".sh"
-        jobids += bc.submitArrayToBatch(scripts = scripts, arrayscriptpath = arrayscriptpath)
-        print 'Jobs submitted!\n'
+        print ('Jobs submitted!\n')
         
         os.chdir(work_dir)
             
@@ -234,13 +249,13 @@ def finalize(process):
         
     os.chdir(work_dir)
     
-    print 'Finished! You can find all generated data and the seeds used for the generation within the GenData directory.'
+    print ('Finished! You can find all generated data and the seeds used for the generation within the GenData directory.')
 
 
 
 def main(args = sys.argv[1:]):
     if not(args[0].isdigit()):
-        print 'Wrong usage! First argument has to be an integer, representing the number of batches, further arguments should be directories to a POWHEG process\nAbort!'
+        print ('Wrong usage! First argument has to be an integer, representing the number of batches, further arguments should be directories to a POWHEG process\nAbort!')
         exit(0)
         
     nbatches = int(args[0])
@@ -249,8 +264,9 @@ def main(args = sys.argv[1:]):
     pdf     = args[3]
     renscfact   = float(args[4])
     facscfact   = float(args[5])
+    runMode     = str(args[6])
     
-    submit_handler (nbatches = nbatches, process = process, mass = mass, pdf = pdf, renscfact = renscfact, facscfact = facscfact, finalization = False)
+    submit_handler (nbatches = nbatches, process = process, mass = mass, pdf = pdf, renscfact = renscfact, facscfact = facscfact, finalization = False, runMode = runMode)
 
 
 

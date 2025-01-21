@@ -113,7 +113,7 @@ def top_2_root(inFilename, isGraph = False):
     # for inFilename in args:
     base, ext = os.path.splitext(inFilename)
     if not ext:
-        print '%s has no file extension' % inFilename
+        print('%s has no file extension' % inFilename)
         return
     outFilename = base + os.extsep + 'root'
 
@@ -121,7 +121,7 @@ def top_2_root(inFilename, isGraph = False):
     #   Read-in topdrawer file   #
     ##############################
     # print "reading ", inFilename
-    print "creating ", outFilename
+    print("creating ", outFilename)
     inFile = open(inFilename, 'r')
     top_plots, plot_lines = [], []
     #skip first line with 
@@ -171,14 +171,14 @@ if __name__ == '__main__':
     try:
         import ROOT
     except ImportError:
-        print 'Please ensure your ROOT installation is in your PYTHONPATH'
+        print('Please ensure your ROOT installation is in your PYTHONPATH')
         sys.exit(1)
     ROOT.gROOT.SetBatch()
 
     for inFilename in args:
         base, ext = os.path.splitext(inFilename)
         if not ext:
-            print '%s has no file extension' % inFilename
+            print('%s has no file extension' % inFilename)
             continue
         outFilename = base + os.extsep + 'root'
 
